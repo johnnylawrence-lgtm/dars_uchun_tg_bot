@@ -6,6 +6,7 @@ Bot features:
 - Kod arenasi: faol arenalar ro'yxati
 """
 
+import asyncio
 import logging
 import os
 import re
@@ -723,6 +724,10 @@ async def bootstrap_db(application: Application) -> None:
 
 
 def main() -> None:
+    # Python 3.14: asyncio.get_event_loop() raises RuntimeError when no current
+    # event loop is set, and Application.run_polling relies on it - so create
+    # and set an event loop explicitly.
+    asyncio.set_event_loop(asyncio.new_event_loop())
     app = Application.builder().token(BOT_TOKEN).post_init(bootstrap_db).build()
     app.add_handler(CommandHandler("start", cmd_start))
     app.add_handler(CommandHandler("cancel_arena", cmd_cancel_arena))
