@@ -57,8 +57,8 @@ def st(is_active: bool) -> str:
     return "🟢 Faol" if is_active else "🔴 Yaqin"
 
 
-def state(context: ContextTypes.DEFAULT_TYPE) -> "dict[str, Any]":
-    uid = context.effective_user.id
+def state(update: Update) -> "dict[str, Any]":
+    uid = update.effective_user.id
     return STATE.setdefault(uid, {})
 
 
@@ -97,7 +97,7 @@ async def send_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, is_
 
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
-    st_ = state(context)
+    st_ = state(update)
     st_["arena_id"] = None
     st_["arena_questions"] = None
     st_["wait"] = None
@@ -127,7 +127,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def cb_signup(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    st_ = state(context)
+    st_ = state(update)
     st_["wait"] = "signup_login"
     await edit(update, "📝 Loginni kiriting:")
 
@@ -147,7 +147,7 @@ async def send_user_arena_list(update: Update, context: ContextTypes.DEFAULT_TYP
 
 
 async def enter_arena(update: Update, context: ContextTypes.DEFAULT_TYPE, arena_id: int) -> None:
-    st_ = state(context)
+    st_ = state(update)
     arena = await db.get_arena(arena_id)
     if arena is None or not arena["is_active"]:
         await edit(update, "🚪 Arena yopiq ❌", kb([btn("🔙 Ro'yxatga", "user_arena_list")]))
@@ -168,7 +168,7 @@ async def enter_arena(update: Update, context: ContextTypes.DEFAULT_TYPE, arena_
 
 
 async def send_arena_question(update: Update, context: ContextTypes.DEFAULT_TYPE, edit_msg: bool = False) -> None:
-    st_ = state(context)
+    st_ = state(update)
     arena = await db.get_arena(st_["arena_id"])
     idx = st_.get("arena_index", 0)
     questions = st_.get("arena_questions") or []
@@ -192,7 +192,7 @@ async def send_arena_question(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 
 async def answer_question(update: Update, context: ContextTypes.DEFAULT_TYPE, qid: int, option: str) -> None:
-    st_ = state(context)
+    st_ = state(update)
     questions = st_.get("arena_questions") or []
     idx = st_.get("arena_index", 0)
     if idx >= len(questions):
@@ -222,7 +222,7 @@ async def answer_question(update: Update, context: ContextTypes.DEFAULT_TYPE, qi
 
 
 async def exit_arena(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    st_ = state(context)
+    st_ = state(update)
     st_["arena_id"] = None
     st_["arena_questions"] = None
     st_["arena_index"] = None
@@ -230,7 +230,7 @@ async def exit_arena(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 
 
 async def cmd_cancel_arena(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    st_ = state(context)
+    st_ = state(update)
     if st_.get("arena_id"):
         st_["arena_id"] = None
         st_["arena_questions"] = None
@@ -332,7 +332,7 @@ async def cb_arena_del_confirm(update: Update, context: ContextTypes.DEFAULT_TYP
 
 
 async def cb_arena_qadd(update: Update, context: ContextTypes.DEFAULT_TYPE, arena_id: int) -> None:
-    st_ = state(context)
+    st_ = state(update)
     st_["addq_arena_id"] = arena_id
     st_["wait"] = "addq_text"
     await reply(update, "📝 Savolni kiriting:")
@@ -388,27 +388,27 @@ async def send_edit_user_menu(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 
 async def cb_add_user(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    st_ = state(context)
+    st_ = state(update)
     st_["wait"] = "add_user_login"
     await reply(update, "🔐 Loginni kiriting:")
 
 
 async def cb_edit_user_name(update: Update, context: ContextTypes.DEFAULT_TYPE, user_id: int) -> None:
-    st_ = state(context)
+    st_ = state(update)
     st_["edit_user_id"] = user_id
     st_["wait"] = "edit_user_name"
     await reply(update, "✏️ Ismini kiriting:")
 
 
 async def cb_edit_user_login(update: Update, context: ContextTypes.DEFAULT_TYPE, user_id: int) -> None:
-    st_ = state(context)
+    st_ = state(update)
     st_["edit_user_id"] = user_id
     st_["wait"] = "edit_user_login"
     await reply(update, "🔐 Loginni kiriting:")
 
 
 async def cb_edit_user_pass(update: Update, context: ContextTypes.DEFAULT_TYPE, user_id: int) -> None:
-    st_ = state(context)
+    st_ = state(update)
     st_["edit_user_id"] = user_id
     st_["wait"] = "edit_user_pass"
     await reply(update, "🔐 Parolni kiriting:")
@@ -433,7 +433,7 @@ async def cb_del_user(update: Update, context: ContextTypes.DEFAULT_TYPE, user_i
 # ---------------- text handlers ----------------
 
 async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    st_ = state(context)
+    st_ = state(update)
     text = (update.message.text or "").strip()
 
     if st_.get("arena_id"):
@@ -583,7 +583,7 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     data = update.callback_query.data or ""
-    st_ = state(context)
+    st_ = state(update)
 
     db_user = await db.get_user_by_tg_id(update.effective_user.id)
     admin = is_admin(update, db_user)
