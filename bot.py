@@ -75,7 +75,7 @@ async def reply(update: Update, text: str, markup=None) -> None:
 async def edit(update: Update, text: str, markup=None) -> None:
     msg = update.effective_message
     if msg is not None:
-        await msg.edit_message_text(text, reply_markup=markup)
+        await msg.edit_text(text, reply_markup=markup)
 
 
 async def reply_or_edit(update: Update, text: str, markup=None) -> None:
